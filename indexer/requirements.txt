@@ -1,0 +1,36 @@
+# Core dependencies
+web3==6.15.1
+eth-abi==4.2.1
+eth-utils==2.3.1
+
+# IPFS and HTTP
+ipfshttpclient==0.8.0a2
+aiohttp==3.9.1
+httpx==0.25.2
+
+# Database
+asyncpg==0.29.0
+sqlalchemy[asyncio]==2.0.23
+alembic==1.13.1
+
+# Data processing
+pydantic==2.5.2
+msgpack==1.0.7
+ujson==5.9.0
+
+# CLI and utilities
+click==8.1.7
+rich==13.7.0
+python-dotenv==1.0.0
+structlog==23.2.0
+
+# Async and concurrency
+asyncio-mqtt==0.16.1
+aiofiles==23.2.1
+
+# Development
+pytest==7.4.4
+pytest-asyncio==0.21.1
+black==23.12.1
+isort==5.13.2
+mypy==1.8.0

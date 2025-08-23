@@ -1,0 +1,3 @@
+# nweb Testing Dependencies
+Faker>=20.0.0
+aiosqlite>=0.21.0
