@@ -234,7 +234,7 @@ export async function GET(request: NextRequest) {
     console.error('Search API error:', error)
     return NextResponse.json(
       {
-        query: searchParams.get('q') || '',
+        query: '',
         total: 0,
         results: [],
         took: 0,
