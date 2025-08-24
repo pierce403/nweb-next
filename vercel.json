@@ -14,10 +14,5 @@
   ],
   "env": {
     "NODE_ENV": "production"
-  },
-  "functions": {
-    "analyst/app/api/**/*.ts": {
-      "maxDuration": 30
-    }
   }
 }

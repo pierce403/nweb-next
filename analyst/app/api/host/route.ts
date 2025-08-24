@@ -57,12 +57,12 @@ export async function GET(request: NextRequest) {
     const submissions = await db
       .selectFrom('submissions')
       .select([ 'uid', 'dataset_type', 'tool', 'version', 'timestamp' ])
-      .whereExists(eb => eb
-        .selectFrom('records')
-        .select(sql`1`)
-        .whereRef('records.submission_uid', '=', 'submissions.uid')
-        .where('records.ip', '=', ip)
-      )
+      .where(eb => eb.exists(
+        eb.selectFrom('records')
+          .select(sql`1`)
+          .whereRef('records.submission_uid', '=', 'submissions.uid')
+          .where('records.ip', '=', ip)
+      ))
       .orderBy('timestamp', 'desc')
       .limit(20)
       .execute()
