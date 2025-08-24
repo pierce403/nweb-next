@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '../../../lib/database'
-import { sql } from 'kysely'
 
 export async function GET(request: NextRequest) {
   try {
@@ -59,7 +58,7 @@ export async function GET(request: NextRequest) {
       .select([ 'uid', 'dataset_type', 'tool', 'version', 'timestamp' ])
       .where(eb => eb.exists(
         eb.selectFrom('records')
-          .select(sql`1`)
+          .select('records.id')
           .whereRef('records.submission_uid', '=', 'submissions.uid')
           .where('records.ip', '=', ip)
       ))
