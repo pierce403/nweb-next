@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
     // Insert submission
     await db.insertInto('submissions')
-      .values({
+      .values(() => ({
         uid: scanResult.uid,
         submitter: scanResult.submitter,
         job_id: scanResult.job_id,
@@ -72,13 +72,13 @@ export async function POST(request: NextRequest) {
         version: scanResult.version,
         vantage: scanResult.vantage,
         manifest_sha256: scanResult.manifest_sha256,
-        extra: JSON.stringify(scanResult.extra),
+        extra: Buffer.from(JSON.stringify(scanResult.extra ?? {})),
         timestamp: scanResult.timestamp,
         processed_at: scanResult.processed_at ? new Date(scanResult.processed_at) : new Date(),
-        status: scanResult.status,
+        status: scanResult.status as any,
         error_message: scanResult.error_message || null,
         created_at: new Date(scanResult.created_at)
-      })
+      }))
       .execute()
 
     // Insert records
