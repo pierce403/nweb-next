@@ -1,3 +1,5 @@
+import type { Generated } from 'kysely'
+
 export interface Database {
   submissions: Submission
   records: Record
@@ -28,7 +30,7 @@ export interface Submission {
 }
 
 export interface Record {
-  id: number
+  id: Generated<number>
   submission_uid: string
   timestamp: number
   ip: string
