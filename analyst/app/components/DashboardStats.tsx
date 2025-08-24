@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { DashboardStats as DashboardStatsType } from '../../../types/database'
+import { DashboardStats as DashboardStatsType } from '../../types/database'
 import {
   ChartBarIcon,
   ServerIcon,

@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { DashboardStats as DashboardStatsType } from '../../../types/database'
+import { DashboardStats as DashboardStatsType } from '../../types/database'
 import { format, parseISO } from 'date-fns'
 import { ChartBarIcon } from '@heroicons/react/24/outline'
 import toast from 'react-hot-toast'
