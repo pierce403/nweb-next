@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '../../../lib/database'
+import { sql } from 'kysely'
 
 export async function GET(request: NextRequest) {
   try {
