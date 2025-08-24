@@ -91,7 +91,7 @@ export async function getDatabase(): Promise<Kysely<Database>> {
     })
   }
 
-  return dbInstance
+  return dbInstance as Kysely<Database>
 }
 
 // Export a promise that resolves to the database instance

@@ -1,8 +1,8 @@
-import { sql } from 'kysely'
+import { sql, type Selectable } from 'kysely'
 import { getDatabase } from './database'
 import type {
   Submission,
-  Record,
+  Record as DBRecord,
   SubmissionWithStats,
   DashboardStats,
   IndexerState
@@ -143,9 +143,9 @@ export async function getSubmissions({
 }: {
   limit?: number
   offset?: number
-  status?: string
+  status?: Submission['status']
   submitter?: string
-  sortBy?: string
+  sortBy?: 'timestamp' | 'processed_at' | 'created_at' | 'submitter'
   sortOrder?: 'asc' | 'desc'
 } = {}): Promise<SubmissionWithStats[]> {
   try {
@@ -163,9 +163,8 @@ export async function getSubmissions({
       query = query.where('submitter', '=', submitter)
     }
 
-    // Add record count subquery
+    // Add record count subqueries
     query = query.select([
-      ...Object.keys(db.selectFrom('submissions').selectAll().compile().columns || []),
       sql<number>`(
         select count(*) from records where records.submission_uid = submissions.uid
       )`.as('record_count'),
@@ -177,8 +176,8 @@ export async function getSubmissions({
       )`.as('unique_ports'),
     ] as any)
 
-    const validSortFields = ['timestamp', 'processed_at', 'created_at', 'submitter']
-    if (validSortFields.includes(sortBy)) {
+    const validSortFields = ['timestamp', 'processed_at', 'created_at', 'submitter'] as const
+    if ((validSortFields as readonly string[]).includes(sortBy)) {
       query = query.orderBy(sortBy, sortOrder)
     } else {
       query = query.orderBy('timestamp', 'desc')
@@ -235,9 +234,9 @@ export async function getRecords({
   port?: number
   service?: string
   submission_uid?: string
-  sortBy?: string
+  sortBy?: 'timestamp' | 'ip' | 'port' | 'service'
   sortOrder?: 'asc' | 'desc'
-} = {}): Promise<Record[]> {
+} = {}): Promise<Selectable<DBRecord>[]> {
   try {
     const db = await getDatabase()
     let query = db.selectFrom('records')
@@ -261,8 +260,8 @@ export async function getRecords({
       query = query.where('submission_uid', '=', submission_uid)
     }
 
-    const validSortFields = ['timestamp', 'ip', 'port', 'service']
-    if (validSortFields.includes(sortBy)) {
+    const validSortFields = ['timestamp', 'ip', 'port', 'service'] as const
+    if ((validSortFields as readonly string[]).includes(sortBy)) {
       query = query.orderBy(sortBy, sortOrder)
     } else {
       query = query.orderBy('timestamp', 'desc')
@@ -275,13 +274,14 @@ export async function getRecords({
   }
 }
 
-export async function getRecord(id: number): Promise<Record | null> {
+export async function getRecord(id: number): Promise<Selectable<DBRecord> | null> {
   try {
     const db = await getDatabase()
-    return await db.selectFrom('records')
+    const row = await db.selectFrom('records')
       .selectAll()
       .where('id', '=', id)
       .executeTakeFirst()
+    return row ?? null
   } catch (error) {
     console.error('Error fetching record:', error)
     throw new APIError(500, 'Failed to fetch record')
@@ -311,7 +311,7 @@ export async function searchIPs(query: string, limit = 20): Promise<Array<{ip: s
 export async function searchServices(query: string, limit = 20): Promise<Array<{service: string, count: number}>> {
   try {
     const db = await getDatabase()
-    return await db.selectFrom('records')
+    const rows = await db.selectFrom('records')
       .select([
         'service',
         sql<number>`count(*)`.as('count')
@@ -322,6 +322,7 @@ export async function searchServices(query: string, limit = 20): Promise<Array<{
       .orderBy('count', 'desc')
       .limit(limit)
       .execute()
+    return rows.map(r => ({ service: r.service || 'Unknown', count: Number(r.count) }))
   } catch (error) {
     console.error('Error searching services:', error)
     throw new APIError(500, 'Failed to search services')
@@ -332,9 +333,10 @@ export async function searchServices(query: string, limit = 20): Promise<Array<{
 export async function getIndexerState(): Promise<IndexerState | null> {
   try {
     const db = await getDatabase()
-    return await db.selectFrom('indexer_state')
+    const row = await db.selectFrom('indexer_state')
       .selectAll()
       .executeTakeFirst()
+    return row ?? null
   } catch (error) {
     console.error('Error fetching indexer state:', error)
     return null
