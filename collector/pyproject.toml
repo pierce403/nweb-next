@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nweb-collector"
+version = "0.1.0"
+description = "nweb collector - run nmap scans, build bundles, and submit attestations"
+requires-python = ">=3.11"
+dependencies = [
+    "eth-abi>=4.2.1",
+    "eth-utils>=2.3.1",
+    "python-dotenv>=1.0.0",
+    "requests>=2.31.0",
+    "web3>=6.15.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.4",
+]
+
+[project.scripts]
+nweb-collector = "collector.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

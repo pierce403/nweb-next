@@ -37,8 +37,12 @@ export async function GET(request: NextRequest) {
       try {
         // Use separate queries for each field to work with mock database
         const submissionQueries = [
+          db.selectFrom('submissions').selectAll().where('uid', 'like', `%${query}%`).limit(limit),
           db.selectFrom('submissions').selectAll().where('submitter', 'like', `%${query}%`).limit(limit),
           db.selectFrom('submissions').selectAll().where('job_id', 'like', `%${query}%`).limit(limit),
+          db.selectFrom('submissions').selectAll().where('dataset_type', 'like', `%${query}%`).limit(limit),
+          db.selectFrom('submissions').selectAll().where('cid', 'like', `%${query}%`).limit(limit),
+          db.selectFrom('submissions').selectAll().where('merkle_root', 'like', `%${query}%`).limit(limit),
           db.selectFrom('submissions').selectAll().where('tool', 'like', `%${query}%`).limit(limit),
           db.selectFrom('submissions').selectAll().where('namespace', 'like', `%${query}%`).limit(limit)
         ]
@@ -71,7 +75,11 @@ export async function GET(request: NextRequest) {
             },
             score: calculateRelevance(query, [
               submission.submitter,
+              submission.uid,
               submission.job_id,
+              submission.dataset_type,
+              submission.cid,
+              submission.merkle_root,
               submission.tool,
               submission.namespace
             ])

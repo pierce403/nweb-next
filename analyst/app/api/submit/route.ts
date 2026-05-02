@@ -74,10 +74,10 @@ export async function POST(request: NextRequest) {
         manifest_sha256: scanResult.manifest_sha256,
         extra: Buffer.from(JSON.stringify(scanResult.extra ?? {})),
         timestamp: scanResult.timestamp,
-        processed_at: scanResult.processed_at ? new Date(scanResult.processed_at) : new Date(),
+        processed_at: (scanResult.processed_at || new Date().toISOString()) as any,
         status: scanResult.status as any,
         error_message: scanResult.error_message || null,
-        created_at: new Date(scanResult.created_at)
+        created_at: scanResult.created_at as any
       }))
       .execute()
 

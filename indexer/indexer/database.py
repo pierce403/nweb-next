@@ -8,8 +8,7 @@ from sqlalchemy import (
     ForeignKey, Index, func, JSON, LargeBinary
 )
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, AsyncEngine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy.orm import declarative_base, relationship, sessionmaker
 from sqlalchemy.pool import StaticPool
 
 from .config import config

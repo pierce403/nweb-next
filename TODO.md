@@ -1,25 +1,25 @@
 # nweb — TODO
 
 ## 💥 v0 Milestone (MVP Network)
-- [ ] **Contracts** (Foundry)
-  - [ ] Attestor (EAS-compatible events; schema registry)
-  - [ ] StakeRegistry (stake, withdraw, quota view)
-  - [ ] SubmissionRouter (record attestation UID, emit events)
-  - [ ] SlashRouter (immutable params: 72h, 10% slash, 50/50 bounty)
-  - [ ] Deployment scripts (Base mainnet + addresses → `.env.example`)
+- [x] **Contracts** (Foundry)
+  - [x] Attestor (EAS-compatible events; schema registry)
+  - [x] StakeRegistry (stake, withdraw, quota view)
+  - [x] SubmissionRouter (record attestation UID, emit events)
+  - [x] SlashRouter (immutable params: 72h, 10% slash, 50/50 bounty)
+  - [x] Deployment scripts (Base mainnet + addresses → `.env.example`)
 - [ ] **Schemas**
-  - [ ] Define `ScanSubmission`, `AvailabilityCheck`, `Challenge`, `Resolution` encoders/decoders
+  - [x] Define `ScanSubmission`, `AvailabilityCheck`, `Challenge`, `Resolution` encoders/decoders
   - [ ] Publish schema UIDs; add to README
 - [ ] **Bundle Spec**
   - [ ] Finalize `manifest.json` schema + examples
   - [ ] Canonical IPFS add flags (cid-v1, raw-leaves, wrap-with-directory)
-  - [ ] `scanprint v0` canonicalizer + Merkle builder
+  - [x] `scanprint v0` canonicalizer + Merkle builder
 
 ## 🐍 Python Components
 - [ ] **collector/**
   - [ ] CLI: target spec parsing (`asn:`, `cidr:`, profiles), run `nmap`, take screenshots (HTTP, RDP, VNC)
-  - [ ] Build UnixFS bundle + manifest; compute scanprint Merkle
-  - [ ] IPFS add + pin; submit `ScanSubmission` attestation
+  - [x] Build UnixFS bundle + manifest; compute scanprint Merkle
+  - [x] IPFS add + pin; submit `ScanSubmission` attestation
   - [ ] Dockerfile + publish to `ghcr.io/pierce403/nweb-collector`
 - [ ] **hoarder/**
   - [ ] Tail wallet’s submissions; ensure pins; optional CAR export
@@ -40,18 +40,19 @@
   - [ ] Pages: search, IP view, ASN view, submission details, settings/health
   - [ ] Diff visualizations (service/version changes)
 - [ ] **dispatcher/**
-  - [ ] `/getwork` endpoint (open/public)
-  - [ ] Target list management (file/CID + simple UI)
+  - [x] `/getwork` endpoint (open/public)
+  - [x] Analyst-submitted domain priority queue
+  - [ ] File/CID-backed target lists
 
 ## 🧪 Test & CI
 - [ ] Local dev: seed with a **sample bundle** + a **dummy attestation** (testnet fork)
-- [ ] Contract unit tests (Foundry)
+- [x] Contract unit tests (Foundry)
 - [ ] Indexer integration tests (containers for IPFS+PG)
 - [ ] Lint/format hooks (ruff, black, eslint, prettier)
 
 ## 📄 Docs & Ops
 - [ ] Fill in **CONTRIBUTING.md**, **CODE_OF_CONDUCT.md**
-- [ ] Add **.env.example** with all placeholders
+- [x] Add **.env.example** with all placeholders
 - [ ] Add **docker-compose.yml** (optional path) for ipfs+pg+analyst local
 - [ ] Generate **CSV export** for payouts/claims in analyst
 - [ ] Publish **deny/opt-out list** process

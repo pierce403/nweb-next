@@ -4,6 +4,7 @@ pragma solidity ^0.8.19;
 import "./Attestor.sol";
 import "./StakeRegistry.sol";
 import "./SubmissionRouter.sol";
+import "forge-std/interfaces/IERC20.sol";
 
 /// @title SlashRouter - Handles challenge resolution and slashing
 /// @notice Immutable slashing rules: 72h grace, 10% slash, 50/50 bounty split
@@ -27,11 +28,12 @@ contract SlashRouter {
     uint64 public constant GRACE_PERIOD = 72 hours;
     uint256 public constant SLASH_PERCENT = 10; // 10% of stake
     uint256 public constant CHALLENGER_BOUNTY_PERCENT = 50; // 50% of slashed amount
-    uint256 public constant MIN_STAKE = 100 * 10**18; // 100 GST
+    uint256 public constant MIN_STAKE = 100 * 10 ** 18; // 100 GST
 
     Attestor public attestor;
     StakeRegistry public stakeRegistry;
     SubmissionRouter public submissionRouter;
+    address public owner;
 
     bytes32 public challengeSchemaUID;
     bytes32 public resolutionSchemaUID;
@@ -44,18 +46,20 @@ contract SlashRouter {
     event ChallengeResolved(bytes32 indexed uid, bool slash, uint256 slashAmount);
     event Slashed(address indexed user, uint256 amount, address indexed challenger, uint256 bounty);
 
-    constructor(
-        address _attestor,
-        address _stakeRegistry,
-        address _submissionRouter
-    ) {
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can call this function");
+        _;
+    }
+
+    constructor(address _attestor, address _stakeRegistry, address _submissionRouter) {
         attestor = Attestor(_attestor);
         stakeRegistry = StakeRegistry(_stakeRegistry);
         submissionRouter = SubmissionRouter(_submissionRouter);
+        owner = msg.sender;
     }
 
     /// @notice Set schema UIDs
-    function setSchemaUIDs(bytes32 _challengeSchemaUID, bytes32 _resolutionSchemaUID) external {
+    function setSchemaUIDs(bytes32 _challengeSchemaUID, bytes32 _resolutionSchemaUID) external onlyOwner {
         require(challengeSchemaUID == bytes32(0), "Schema UIDs already set");
         challengeSchemaUID = _challengeSchemaUID;
         resolutionSchemaUID = _resolutionSchemaUID;
@@ -70,7 +74,7 @@ contract SlashRouter {
         require(attestation.schemaUID == challengeSchemaUID, "Wrong schema");
 
         Challenge memory challenge = _decodeChallengeData(attestation.data);
-        require(challenge.uid != bytes32(0), "Invalid challenge data");
+        require(challenge.jobId != bytes32(0), "Invalid challenge data");
 
         // Verify the submission exists
         require(submissionRouter.isSubmissionValid(challenge.jobId), "Submission not found");
@@ -145,10 +149,10 @@ contract SlashRouter {
             // Pay bounty to challenger
             uint256 bounty = (slashAmount * CHALLENGER_BOUNTY_PERCENT) / 100;
             if (bounty > 0) {
-                // Note: In production, this would transfer GST tokens to challenger
-                // For now, we just emit the event
-                emit Slashed(submission.submitter, slashAmount, challenge.challenger, bounty);
+                IERC20(stakeRegistry.gstToken()).transfer(challenge.challenger, bounty);
             }
+
+            emit Slashed(submission.submitter, slashAmount, challenge.challenger, bounty);
         }
 
         // Mark as resolved (with slash)
@@ -177,21 +181,21 @@ contract SlashRouter {
     /// @notice Check if a challenge can be processed
     function canProcessTimeout(bytes32 challengeUID) external view returns (bool) {
         Challenge memory challenge = challenges[challengeUID];
-        return challenge.uid != bytes32(0) &&
-               !challenge.resolved &&
-               block.timestamp >= challenge.graceEndsAt;
+        return challenge.uid != bytes32(0) && !challenge.resolved && block.timestamp >= challenge.graceEndsAt;
     }
 
     /// @notice Internal function to decode challenge data
     function _decodeChallengeData(bytes memory data) internal pure returns (Challenge memory) {
-        // Simplified decoding - in production, use proper ABI decoding
+        (bytes32 jobId, string memory cid, bytes32 reasonCode, string memory evidenceCid, uint64 graceEndsAt) =
+            abi.decode(data, (bytes32, string, bytes32, string, uint64));
+
         return Challenge({
             uid: bytes32(0),
-            jobId: bytes32(0),
-            cid: "",
-            reasonCode: bytes32(0),
-            evidenceCid: "",
-            graceEndsAt: 0,
+            jobId: jobId,
+            cid: cid,
+            reasonCode: reasonCode,
+            evidenceCid: evidenceCid,
+            graceEndsAt: graceEndsAt,
             challenger: address(0),
             resolved: false,
             slash: false,
@@ -202,14 +206,11 @@ contract SlashRouter {
     }
 
     /// @notice Internal function to decode resolution data
-    function _decodeResolutionData(bytes memory data) internal pure returns (
-        bytes32 challengeId,
-        bool slash,
-        uint256 slashAmount,
-        string memory notes,
-        string memory newCid
-    ) {
-        // Simplified decoding - in production, use proper ABI decoding
-        return (bytes32(0), false, 0, "", "");
+    function _decodeResolutionData(bytes memory data)
+        internal
+        pure
+        returns (bytes32 challengeId, bool slash, uint256 slashAmount, string memory notes, string memory newCid)
+    {
+        return abi.decode(data, (bytes32, bool, uint256, string, string));
     }
 }

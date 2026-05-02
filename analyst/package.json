@@ -12,8 +12,13 @@
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
+  "postcss": {
+    "plugins": {
+      "tailwindcss": {},
+      "autoprefixer": {}
+    }
+  },
   "dependencies": {
-    "@faker-js/faker": "^9.9.0",
     "@headlessui/react": "^1.7.17",
     "@heroicons/react": "^2.0.18",
     "autoprefixer": "^10.4.16",
@@ -23,7 +28,7 @@
     "framer-motion": "^10.16.16",
     "kysely": "^0.26.3",
     "kysely-postgres-js": "^2.0.0",
-    "next": "14.0.4",
+    "next": "^15.5.15",
     "pg": "^8.11.3",
     "postcss": "^8.4.32",
     "postgres": "^3.4.3",

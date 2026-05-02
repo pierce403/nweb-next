@@ -3,13 +3,13 @@
 import asyncio
 from typing import List, Dict, Any, Optional, Callable
 from web3 import AsyncWeb3, AsyncHTTPProvider
-from web3.eth import AsyncContract
 from web3.exceptions import BlockNotFound
 from eth_utils import to_hex
 from structlog import get_logger
 
 from .config import config
 from .models import Submission
+from .schemas import decode_scan_submission
 
 logger = get_logger()
 
@@ -19,7 +19,7 @@ class BlockchainWatcher:
 
     def __init__(self):
         self.w3: Optional[AsyncWeb3] = None
-        self.contract: Optional[AsyncContract] = None
+        self.contract: Optional[Any] = None
         self.event_handlers: List[Callable] = []
         self.is_watching = False
 
@@ -182,28 +182,24 @@ class BlockchainWatcher:
     async def _parse_scan_submission(self, uid: str, attestation: Dict[str, Any]) -> Optional[Submission]:
         """Parse scan submission from attestation data."""
         try:
-            # Decode attestation data
-            # This is a simplified implementation - in production, use proper ABI decoding
-            data = attestation["data"]
+            decoded = decode_scan_submission(attestation["data"])
 
-            # For now, create a basic submission structure
-            # In production, properly decode the attestation data according to the schema
             submission = Submission(
                 uid=uid,
-                submitter=attestation["attester"],
-                job_id="",  # Would be decoded from data
-                namespace="nweb.io",
-                dataset_type="nmap",
-                cid="",  # Would be decoded from data
-                merkle_root="",  # Would be decoded from data
-                target_spec_cid="",  # Would be decoded from data
-                started_at=attestation["timestamp"],
-                finished_at=attestation["timestamp"],
-                tool="nmap",
-                version="7.95",
-                vantage="",  # Would be decoded from data
-                manifest_sha256="",  # Would be decoded from data
-                extra=data,
+                submitter=decoded["submitter"],
+                job_id=decoded["job_id"],
+                namespace=decoded["namespace"],
+                dataset_type=decoded["dataset_type"],
+                cid=decoded["cid"],
+                merkle_root=decoded["merkle_root"],
+                target_spec_cid=decoded["target_spec_cid"],
+                started_at=decoded["started_at"],
+                finished_at=decoded["finished_at"],
+                tool=decoded["tool"],
+                version=decoded["version"],
+                vantage=decoded["vantage"],
+                manifest_sha256=decoded["manifest_sha256"],
+                extra=decoded["extra"],
                 timestamp=attestation["timestamp"]
             )
 

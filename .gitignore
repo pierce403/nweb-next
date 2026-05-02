@@ -17,6 +17,8 @@ out/
 # Local databases / data
 nweb-analyst.db
 analyst/nweb-analyst.db
+collector/runs/
+analyst/tsconfig.tsbuildinfo
 *.sqlite
 *.sqlite3
 

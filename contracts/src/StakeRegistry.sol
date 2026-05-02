@@ -20,7 +20,7 @@ contract StakeRegistry {
     mapping(address => bool) public slashableAddresses;
 
     // Constants for quota calculation
-    uint256 public constant MIN_STAKE = 100 * 10**18; // 100 GST minimum
+    uint256 public constant MIN_STAKE = 100 * 10 ** 18; // 100 GST minimum
     uint256 public constant MAX_REP_FACTOR = 5; // Maximum reputation multiplier
 
     event Staked(address indexed user, uint256 amount);
@@ -36,6 +36,12 @@ contract StakeRegistry {
     constructor(address _gstToken) {
         gstToken = IERC20(_gstToken);
         owner = msg.sender;
+    }
+
+    /// @notice Transfer administrative control to protocol router/governance
+    function transferOwnership(address newOwner) external onlyOwner {
+        require(newOwner != address(0), "New owner is zero address");
+        owner = newOwner;
     }
 
     /// @notice Stake GST tokens to earn quota

@@ -9,12 +9,14 @@ import {
   GlobeAltIcon,
   ServerIcon,
   Cog6ToothIcon,
-  WrenchScrewdriverIcon
+  WrenchScrewdriverIcon,
+  QueueListIcon
 } from '@heroicons/react/24/outline'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: ChartBarIcon },
   { name: 'Search', href: '/search', icon: MagnifyingGlassIcon },
+  { name: 'Targets', href: '/targets', icon: QueueListIcon },
   { name: 'IPs', href: '/ips', icon: GlobeAltIcon },
   { name: 'Services', href: '/services', icon: ServerIcon },
   { name: 'Submissions', href: '/submissions', icon: Cog6ToothIcon },

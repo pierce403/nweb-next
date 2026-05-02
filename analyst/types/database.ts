@@ -64,6 +64,7 @@ export interface SubmissionWithStats extends Submission {
   record_count: number
   unique_ips: number
   unique_ports: number
+  primary_ip: string | null
 }
 
 export interface RecordWithSubmission extends Record {

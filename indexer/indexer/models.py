@@ -2,16 +2,18 @@
 
 from datetime import datetime
 from typing import List, Optional, Dict, Any
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ScanRecord(BaseModel):
     """Individual scan record from scanprint data."""
 
-    timestamp: int = Field(..., description="Unix timestamp")
+    model_config = ConfigDict(populate_by_name=True)
+
+    timestamp: int = Field(..., alias="ts", description="Unix timestamp")
     ip: str = Field(..., description="Target IP address")
     port: int = Field(..., description="Target port")
-    protocol: str = Field(..., description="Protocol (tcp/udp)")
+    protocol: str = Field(..., alias="proto", description="Protocol (tcp/udp)")
     state: str = Field(..., description="Port state")
     service: Optional[str] = Field(None, description="Service name")
     product: Optional[str] = Field(None, description="Product name")
@@ -29,17 +31,19 @@ class ScanRecord(BaseModel):
 class BundleManifest(BaseModel):
     """Manifest for an IPFS bundle."""
 
-    schema: str = Field(..., description="Bundle schema version")
+    model_config = ConfigDict(populate_by_name=True)
+
+    schema_version: str = Field(..., alias="schema", description="Bundle schema version")
     namespace: str = Field(..., description="Data namespace")
-    dataset_type: str = Field(..., description="Dataset type")
+    dataset_type: str = Field(..., alias="datasetType", description="Dataset type")
     scanprint: Dict[str, Any] = Field(..., description="Scanprint metadata")
     artifacts: List[Dict[str, Any]] = Field(default_factory=list, description="Bundle artifacts")
-    target_spec_cid: str = Field(..., description="Target specification CID")
+    target_spec_cid: str = Field(..., alias="targetSpecCid", description="Target specification CID")
     tool: str = Field(..., description="Tool used")
-    tool_version: str = Field(..., description="Tool version")
+    tool_version: str = Field(..., alias="toolVersion", description="Tool version")
     vantage: str = Field(..., description="Scan vantage point")
-    started_at: int = Field(..., description="Scan start timestamp")
-    finished_at: int = Field(..., description="Scan end timestamp")
+    started_at: int = Field(..., alias="startedAt", description="Scan start timestamp")
+    finished_at: int = Field(..., alias="finishedAt", description="Scan end timestamp")
     notes: Optional[str] = Field(None, description="Optional notes")
 
 

@@ -3,7 +3,7 @@
 import asyncio
 from datetime import datetime
 from typing import Optional, Set
-from sqlalchemy import select
+from sqlalchemy import func, select
 from structlog import get_logger
 
 from .config import config

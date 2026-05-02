@@ -28,6 +28,7 @@ contract SubmissionRouter {
 
     Attestor public attestor;
     StakeRegistry public stakeRegistry;
+    address public owner;
 
     bytes32 public scanSubmissionSchemaUID;
     bytes32 public challengeSchemaUID;
@@ -43,9 +44,15 @@ contract SubmissionRouter {
     event SubmissionRecorded(bytes32 indexed uid, address indexed submitter, string datasetType);
     event SchemaUIDsSet(bytes32 scanSubmission, bytes32 challenge, bytes32 resolution);
 
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can call this function");
+        _;
+    }
+
     constructor(address _attestor, address _stakeRegistry) {
         attestor = Attestor(_attestor);
         stakeRegistry = StakeRegistry(_stakeRegistry);
+        owner = msg.sender;
 
         // Set default dataset costs
         datasetCosts["nmap-quick"] = 1;
@@ -56,11 +63,10 @@ contract SubmissionRouter {
     }
 
     /// @notice Set schema UIDs (called after schema registration)
-    function setSchemaUIDs(
-        bytes32 _scanSubmissionSchemaUID,
-        bytes32 _challengeSchemaUID,
-        bytes32 _resolutionSchemaUID
-    ) external {
+    function setSchemaUIDs(bytes32 _scanSubmissionSchemaUID, bytes32 _challengeSchemaUID, bytes32 _resolutionSchemaUID)
+        external
+        onlyOwner
+    {
         require(scanSubmissionSchemaUID == bytes32(0), "Schema UIDs already set");
 
         scanSubmissionSchemaUID = _scanSubmissionSchemaUID;
@@ -93,6 +99,8 @@ contract SubmissionRouter {
         require(stakeRegistry.hasQuota(msg.sender, cost), "Insufficient quota");
 
         // Store submission
+        submission.uid = attestationUID;
+        submission.timestamp = uint64(block.timestamp);
         submissions[attestationUID] = submission;
         submitterSubmissions[msg.sender].push(attestationUID);
         allSubmissionUIDs.push(attestationUID);
@@ -116,7 +124,7 @@ contract SubmissionRouter {
     }
 
     /// @notice Update dataset cost (owner only)
-    function setDatasetCost(string calldata datasetType, uint256 cost) external {
+    function setDatasetCost(string calldata datasetType, uint256 cost) external onlyOwner {
         datasetCosts[datasetType] = cost;
     }
 
@@ -127,24 +135,57 @@ contract SubmissionRouter {
 
     /// @notice Internal function to decode submission data from attestation
     function _decodeSubmissionData(bytes memory data) internal pure returns (Submission memory) {
-        // Simplified decoding - in production, use proper ABI decoding
-        // This is a placeholder implementation
+        (
+            address submitter,
+            bytes32 jobId,
+            string memory namespace,
+            string memory datasetType,
+            string memory cid,
+            bytes32 merkleRoot,
+            string memory targetSpecCid,
+            uint64 startedAt,
+            uint64 finishedAt,
+            string memory tool,
+            string memory version,
+            string memory vantage,
+            string memory manifestSha256,
+            bytes memory extra
+        ) = abi.decode(
+            data,
+            (
+                address,
+                bytes32,
+                string,
+                string,
+                string,
+                bytes32,
+                string,
+                uint64,
+                uint64,
+                string,
+                string,
+                string,
+                string,
+                bytes
+            )
+        );
+
         return Submission({
-            uid: bytes32(0), // Will be set by caller
-            submitter: address(0),
-            jobId: bytes32(0),
-            namespace: "",
-            datasetType: "",
-            cid: "",
-            merkleRoot: bytes32(0),
-            targetSpecCid: "",
-            startedAt: 0,
-            finishedAt: 0,
-            tool: "",
-            version: "",
-            vantage: "",
-            manifestSha256: "",
-            extra: "",
+            uid: bytes32(0),
+            submitter: submitter,
+            jobId: jobId,
+            namespace: namespace,
+            datasetType: datasetType,
+            cid: cid,
+            merkleRoot: merkleRoot,
+            targetSpecCid: targetSpecCid,
+            startedAt: startedAt,
+            finishedAt: finishedAt,
+            tool: tool,
+            version: version,
+            vantage: vantage,
+            manifestSha256: manifestSha256,
+            extra: extra,
             timestamp: 0
         });
     }

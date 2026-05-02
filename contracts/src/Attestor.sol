@@ -39,20 +39,11 @@ contract Attestor {
     /// @param schema The schema string (EIP-712 format)
     /// @param resolver Address that can resolve attestations (optional)
     /// @param revocable Whether attestations using this schema can be revoked
-    function registerSchema(
-        string calldata schema,
-        address resolver,
-        bool revocable
-    ) external returns (bytes32) {
-        bytes32 uid = keccak256(abi.encodePacked(schema, resolver, revocable, block.timestamp));
+    function registerSchema(string calldata schema, address resolver, bool revocable) external returns (bytes32) {
+        bytes32 uid = keccak256(abi.encode(schema, resolver, revocable));
         require(schemas[uid].uid == bytes32(0), "Schema already exists");
 
-        schemas[uid] = Schema({
-            schema: schema,
-            resolver: resolver,
-            revocable: revocable,
-            uid: uid
-        });
+        schemas[uid] = Schema({schema: schema, resolver: resolver, revocable: revocable, uid: uid});
 
         schemaUIDs.push(uid);
         emit SchemaRegistered(uid, msg.sender);
@@ -64,21 +55,13 @@ contract Attestor {
     /// @param schemaUID The schema UID to use
     /// @param expirationTime When the attestation expires (0 for no expiration)
     /// @param data The attestation data
-    function attest(
-        address subject,
-        bytes32 schemaUID,
-        uint64 expirationTime,
-        bytes calldata data
-    ) external returns (bytes32) {
+    function attest(address subject, bytes32 schemaUID, uint64 expirationTime, bytes calldata data)
+        external
+        returns (bytes32)
+    {
         require(schemas[schemaUID].uid != bytes32(0), "Schema not registered");
 
-        bytes32 uid = keccak256(abi.encodePacked(
-            msg.sender,
-            subject,
-            schemaUID,
-            block.timestamp,
-            data
-        ));
+        bytes32 uid = keccak256(abi.encodePacked(msg.sender, subject, schemaUID, block.timestamp, data));
 
         require(attestations[uid].uid == bytes32(0), "Attestation already exists");
 

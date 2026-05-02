@@ -1,66 +1,46 @@
-## Foundry
+# nweb Contracts
 
-**Foundry is a blazing fast, portable and modular toolkit for Ethereum application development written in Rust.**
+Foundry contracts for the nweb attestation, staking, submission, and challenge flow.
 
-Foundry consists of:
+## Contracts
 
--   **Forge**: Ethereum testing framework (like Truffle, Hardhat and DappTools).
--   **Cast**: Swiss army knife for interacting with EVM smart contracts, sending transactions and getting chain data.
--   **Anvil**: Local Ethereum node, akin to Ganache, Hardhat Network.
--   **Chisel**: Fast, utilitarian, and verbose solidity REPL.
+- `Attestor`: lightweight schema registry and attestation store.
+- `StakeRegistry`: GST stake accounting and quota calculation.
+- `SubmissionRouter`: validates and records `ScanSubmission` attestations.
+- `SlashRouter`: files challenges, accepts resolutions, and processes timeout slashing.
+- `GST`: local/test ERC-20 used when a bridged GST address is not supplied.
 
-## Documentation
+## Build And Test
 
-https://book.getfoundry.sh/
-
-## Usage
-
-### Build
-
-```shell
-$ forge build
+```bash
+forge build
+forge test
 ```
 
-### Test
+## Deploy
 
-```shell
-$ forge test
+Set `RPC_URL` and a deployer key, plus `GST_TOKEN_ADDRESS` if you are using an existing GST token. If `GST_TOKEN_ADDRESS` is omitted, the script deploys the local `GST` contract.
+
+```bash
+forge script script/DeployNweb.s.sol:DeployNweb \
+  --rpc-url "$RPC_URL" \
+  --private-key "$PRIVATE_KEY" \
+  --broadcast \
+  --verify
 ```
 
-### Format
+The script deploys the routers, registers the four protocol schemas, wires schema UIDs into the routers, transfers `StakeRegistry` ownership to `SlashRouter`, and prints the values to copy into `.env`.
 
-```shell
-$ forge fmt
-```
+Required output values:
 
-### Gas Snapshots
-
-```shell
-$ forge snapshot
-```
-
-### Anvil
-
-```shell
-$ anvil
-```
-
-### Deploy
-
-```shell
-$ forge script script/Counter.s.sol:CounterScript --rpc-url <your_rpc_url> --private-key <your_private_key>
-```
-
-### Cast
-
-```shell
-$ cast <subcommand>
-```
-
-### Help
-
-```shell
-$ forge --help
-$ anvil --help
-$ cast --help
+```env
+GST_TOKEN_ADDRESS=
+ATTESTOR_ADDRESS=
+STAKE_REGISTRY_ADDRESS=
+SUBMISSION_ROUTER_ADDRESS=
+SLASH_ROUTER_ADDRESS=
+SCHEMA_UID_SCAN_SUBMISSION=
+SCHEMA_UID_AVAILABILITY_CHECK=
+SCHEMA_UID_CHALLENGE=
+SCHEMA_UID_RESOLUTION=
 ```

@@ -27,6 +27,7 @@ dependencies = [
     "sqlalchemy[asyncio]>=2.0.23",
     "alembic>=1.13.1",
     "pydantic>=2.5.2",
+    "pydantic-settings>=2.1.0",
     "msgpack>=1.0.7",
     "ujson>=5.9.0",
     "click>=8.1.7",
@@ -35,6 +36,12 @@ dependencies = [
     "structlog>=23.2.0",
     "asyncio-mqtt>=0.16.1",
     "aiofiles>=23.2.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.4",
+    "pytest-asyncio>=0.21.1",
 ]
 
 [project.scripts]
@@ -50,6 +57,11 @@ target-version = "py311"
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "N", "UP", "YTT", "S", "BLE", "FBT", "B", "A", "COM", "C4", "DTZ", "T10", "DJ", "EM", "EXE", "FA", "ISC", "ICN", "G", "INP", "PIE", "T20", "PYI", "PT", "Q", "RSE", "RET", "SLF", "SLOT", "SIM", "TID", "TCH", "INT", "ARG", "PTH", "ERA", "PD", "PGH", "PL", "TRY", "FLY", "NPY", "AIR", "PERF", "FURB", "LOG", "RUF"]
 ignore = ["E501", "S101", "S104", "S105", "S106", "S107", "B008", "PLR0913", "PLR0912"]
+
+[tool.pytest.ini_options]
+markers = [
+    "integration: marks tests that require IPFS, Postgres, or blockchain RPC",
+]
 
 [tool.mypy]
 python_version = "3.11"

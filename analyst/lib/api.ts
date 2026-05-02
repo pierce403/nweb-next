@@ -174,6 +174,9 @@ export async function getSubmissions({
       sql<number>`(
         select count(distinct port) from records where records.submission_uid = submissions.uid
       )`.as('unique_ports'),
+      sql<string>`(
+        select min(ip) from records where records.submission_uid = submissions.uid
+      )`.as('primary_ip'),
     ] as any)
 
     const validSortFields = ['timestamp', 'processed_at', 'created_at', 'submitter'] as const

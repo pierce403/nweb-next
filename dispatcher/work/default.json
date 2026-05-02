@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "dispatcher": "local-dev",
+  "updatedAt": "2026-05-02T00:00:00Z",
+  "work": [
+    {
+      "id": "local-loopback-quick",
+      "description": "Safe local smoke test for collector and parser development.",
+      "targets": ["ip:127.0.0.1"],
+      "profile": "quick",
+      "withAssets": false,
+      "priority": 100,
+      "policy": {
+        "rateLimit": "local-only",
+        "respectOptOut": true,
+        "notes": "Only scans loopback on the collector host."
+      },
+      "labels": ["local", "dev", "safe-default"]
+    },
+    {
+      "id": "cloudflare-dns-quick",
+      "description": "Small public target for end-to-end collector tests. Use polite timing.",
+      "targets": ["ip:1.1.1.1", "ip:1.0.0.1"],
+      "profile": "quick",
+      "withAssets": false,
+      "priority": 20,
+      "policy": {
+        "rateLimit": "polite",
+        "respectOptOut": true,
+        "notes": "Use only for low-rate smoke tests from networks where this is permitted."
+      },
+      "labels": ["public", "dns", "smoke-test"]
+    }
+  ]
+}

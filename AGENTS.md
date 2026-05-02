@@ -57,8 +57,8 @@ Welcome! Pick your path: **run nodes**, **analyze data**, or **build code**. Eve
 - Share target specs for collectors via **open** `/getwork`.
   ```bash
   cd dispatcher
-  pnpm install
-  pnpm dev
+  npm install
+  npm run dev
   ```
 
 ### 6) Write **Smart Contracts** / Protocol Code

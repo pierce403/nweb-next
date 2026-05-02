@@ -157,15 +157,29 @@ class IPFSClient:
 
     def _compute_scanprint_merkle_root(self, scanprint_data: str) -> str:
         """Compute Merkle root for scanprint data."""
-        # Simple implementation - in production, use proper Merkle tree
-        lines = [line.strip() for line in scanprint_data.strip().split("\n") if line.strip()]
+        lines = [
+            self._canonicalize_scanprint_line(line)
+            for line in scanprint_data.strip().split("\n")
+            if line.strip()
+        ]
         if not lines:
             return ""
 
-        # For now, just hash the entire content
-        # In production, implement proper canonical JSON serialization + Merkle tree
-        canonical_data = "\n".join(lines).encode("utf-8")
-        return f"0x{hashlib.sha256(canonical_data).hexdigest()}"
+        level = [hashlib.sha256(line.encode("utf-8")).digest() for line in lines]
+        while len(level) > 1:
+            if len(level) % 2 == 1:
+                level.append(level[-1])
+            level = [
+                hashlib.sha256(level[i] + level[i + 1]).digest()
+                for i in range(0, len(level), 2)
+            ]
+
+        return f"0x{level[0].hex()}"
+
+    def _canonicalize_scanprint_line(self, line: str) -> str:
+        """Canonicalize one scanprint JSONL line before hashing."""
+        parsed = json.loads(line)
+        return json.dumps(parsed, sort_keys=True, separators=(",", ":"))
 
     async def check_availability(self, cid: str, gateways: List[str] = None) -> Dict[str, Any]:
         """Check availability across multiple gateways."""

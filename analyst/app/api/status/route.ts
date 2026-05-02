@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDatabase } from '../../../lib/database'
+import { getDashboardStats } from '../../../lib/api'
+
+const DEFAULT_DISPATCHER_URL = 'http://127.0.0.1:7778'
 
 export async function GET(request: NextRequest) {
   try {
-    const db = await getDatabase()
-
-    // Check database connection and get stats
     let databaseInfo = {
       connected: false,
       type: 'Unknown',
@@ -13,16 +12,15 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-      // For now, provide mock stats since the database connection is complex
-      // In a real implementation, you would query the actual database
+      const stats = await getDashboardStats()
       databaseInfo = {
         connected: true,
         type: process.env.POSTGRES_URL ? 'PostgreSQL' : 'SQLite',
         stats: {
-          submissions: 100,
-          records: 12489,
-          unique_ips: 9525,
-          unique_services: 14
+          submissions: stats.total_submissions,
+          records: stats.total_records,
+          unique_ips: stats.unique_ips,
+          unique_services: stats.unique_services
         }
       }
     } catch (error) {
@@ -35,18 +33,17 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Check dispatcher configuration
     const dispatcherInfo = {
-      configured: false,
-      url: null as string | null
+      configured: true,
+      reachable: false,
+      url: getDispatcherUrl()
     }
 
-    // For now, assume no dispatcher is configured
-    // In a real implementation, this would check environment variables or config
-    const DISPATCHER_URL = process.env.DISPATCHER_URL
-    if (DISPATCHER_URL) {
-      dispatcherInfo.configured = true
-      dispatcherInfo.url = DISPATCHER_URL
+    try {
+      const response = await fetch(`${dispatcherInfo.url}/health`, { cache: 'no-store' })
+      dispatcherInfo.reachable = response.ok
+    } catch {
+      dispatcherInfo.reachable = false
     }
 
     const systemInfo = {
@@ -67,4 +64,8 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     )
   }
+}
+
+function getDispatcherUrl(): string {
+  return (process.env.DISPATCHER_URL ?? DEFAULT_DISPATCHER_URL).replace(/\/+$/, '')
 }
