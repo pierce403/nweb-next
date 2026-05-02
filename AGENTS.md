@@ -1,4 +1,101 @@
-# nweb — AGENTS (How You Can Participate)
+# nweb — AGENTS
+
+This file is the canonical instruction notebook for coding agents and human operators working in this repository. Update it when you learn something durable about the codebase, workflow, or collaborator preferences.
+
+## Coding Agent Operating Loop
+
+- Start every task by checking `git status -sb`, reading the local instructions, and identifying the current branch.
+- Keep work in focused steps. Avoid unrelated refactors and never revert changes you did not make unless explicitly asked.
+- Prefer inspectable CLI workflows: `rg`, `git`, `npm`, `uv`, `forge`, `curl`, and small scripts that can be repeated.
+- Before making claims, verify with the narrowest useful command. Record commands that worked here when they are likely to help future agents.
+- When you learn a project convention, pitfall, or collaborator preference, update this file in the same task.
+- End each completed task by committing and pushing. If the worktree includes unrelated changes, stage only the files in scope. If push fails, explain the blocker and leave the commit local.
+- `AGENTS.md` is canonical. If another harness needs `CLAUDE.md`, `GEMINI.md`, or similar, make it a symlink to this file rather than maintaining duplicate instructions.
+
+### Recursive Self-Improvement
+
+Treat improvements to the agent workflow as part of the project. Useful updates include:
+
+- Verified build, test, run, scan, and deploy commands.
+- Project structure and ownership boundaries.
+- Known failures, confusing errors, and their fixes.
+- Local service ports, data files, and generated artifacts to avoid committing.
+- User preferences, especially around commit/push cadence, UI expectations, and fake data.
+- Suggestions for future agents that reduce repeated investigation.
+
+Do not hoard vague notes. Keep this file concise, concrete, and pruned when older guidance becomes wrong.
+
+## Repository Shape
+
+- `collector/`: Python scanner and bundle builder. Runs `nmap`, writes scan bundles, can post directly to Analyst in local development, and can publish/submit through IPFS/Base paths.
+- `dispatcher/`: TypeScript HTTP service on `127.0.0.1:7778` by default. Serves `/getwork`, random public IPv4 work, and Analyst-submitted priority domains through `/targets`.
+- `analyst/`: Next.js app on `127.0.0.1:3000` by default. Uses SQLite locally when `POSTGRES_URL` is unset and exposes local APIs for dashboard stats, submissions, host views, target queue proxying, and local scan indexing.
+- `indexer/`: Python indexer that watches chain submissions, fetches bundles from IPFS, validates/parses them, and writes database rows.
+- `contracts/`: Foundry contracts for attestation, staking, submission routing, slashing, and deployment scripts.
+- `testing/`: Local pipeline tests. Fake/demo data generators were removed; do not reintroduce fake Analyst data.
+
+## Verified Commands
+
+Run the smallest relevant subset for the task.
+
+```bash
+# Dispatcher
+cd dispatcher && npm test && npm run type-check && npm run build
+
+# Analyst
+cd analyst && npm run type-check && npm run build
+
+# Collector
+cd collector && uv run pytest
+
+# Local pipeline tests
+uv run --with pytest pytest testing/test_local_pipeline.py
+
+# Contracts
+cd contracts && forge build && forge test
+```
+
+Local services:
+
+```bash
+./run-dispatcher.sh
+./run-analyst.sh
+./run-collector.sh --help
+./run-collector.sh --ip 8.8.8.8
+./run-collector.sh --continuous --interval 30
+```
+
+Known local URLs:
+
+- Analyst UI: http://127.0.0.1:3000
+- Analyst submissions: http://127.0.0.1:3000/submissions
+- Analyst target queue UI: http://127.0.0.1:3000/targets
+- Dispatcher health: http://127.0.0.1:7778/health
+- Dispatcher work: http://127.0.0.1:7778/getwork
+
+## Pitfalls And Local Rules
+
+- No fake dashboard or demo data. The Analyst should show only real indexed rows.
+- `analyst/nweb-analyst.db`, `collector/runs/`, `.next/`, `node_modules/`, build outputs, venvs, caches, and `analyst/tsconfig.tsbuildinfo` are generated/local and should not be committed.
+- Do not run `next build` while `next dev` is using the same `.next` directory. Stop the dev server first, or remove `.next` before rebuilding.
+- If port `3000` is occupied, inspect and stop stale Analyst processes before starting another one. Avoid leaving duplicate dev servers on `3001`.
+- The Analyst does not pull directly from IPFS. It reads the indexed database. The indexer owns IPFS fetching and parsing in the network path.
+- For local development, `run-collector.sh` can post directly to `http://127.0.0.1:3000/api/submit`.
+- Dispatcher priority domains come from Analyst `/targets` and are returned before random IPv4/static work.
+- Random IPv4 work excludes private, loopback, link-local, multicast, documentation, benchmarking, and reserved ranges, but operators remain responsible for lawful scanning.
+- Use `-Pn` for local collector scans when host discovery blocks useful results. `run-collector.sh` defaults to no ping.
+- Commit and push after every completed task. Use a branch when working from `main`.
+
+## Collaboration Preferences
+
+- Be direct and concrete. Prefer verified facts over speculative explanations.
+- Keep frontend UI operational and data-dense; avoid fake placeholders and marketing-style pages.
+- When a user reports “it’s not showing up,” trace the exact UID/IP through DB, API, and UI before changing behavior.
+- If a task uses a web source such as https://recurse.bot, adapt the guidance to this repository rather than copying it wholesale.
+
+---
+
+# How You Can Participate
 
 Welcome! Pick your path: **run nodes**, **analyze data**, or **build code**. Everything is local-first and composable.
 
