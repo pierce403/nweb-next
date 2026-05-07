@@ -45,6 +45,9 @@ cd dispatcher && npm test && npm run type-check && npm run build
 # Analyst
 cd analyst && npm run type-check && npm run build
 
+# Indexer
+cd indexer && uv run --extra dev python -m pytest tests/test_indexer.py
+
 # Collector
 cd collector && uv run pytest
 
@@ -80,6 +83,8 @@ Known local URLs:
 - Do not run `next build` while `next dev` is using the same `.next` directory. Stop the dev server first, or remove `.next` before rebuilding.
 - If port `3000` is occupied, inspect and stop stale Analyst processes before starting another one. Avoid leaving duplicate dev servers on `3001`.
 - The Analyst does not pull directly from IPFS. It reads the indexed database. The indexer owns IPFS fetching and parsing in the network path.
+- Indexer and Analyst Postgres URLs intentionally differ: indexer uses SQLAlchemy asyncpg, e.g. `postgresql+asyncpg://nweb:<password>@127.0.0.1:5432/nweb`; Analyst/Vercel uses node-postgres/Kysely with a read-only role, e.g. `postgresql://nweb_analyst_ro:<password>@50.126.86.253:5432/nweb?sslmode=require`.
+- Public Analyst `/api/submit` is disabled unless `ENABLE_PUBLIC_SUBMIT=true` is set server-side. Keep Vercel on read-only DB credentials.
 - For local development, `run-collector.sh` can post directly to `http://127.0.0.1:3000/api/submit`.
 - Dispatcher priority domains come from Analyst `/targets` and are returned before random IPv4/static work.
 - Random IPv4 work excludes private, loopback, link-local, multicast, documentation, benchmarking, and reserved ranges, but operators remain responsible for lawful scanning.

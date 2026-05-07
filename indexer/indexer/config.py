@@ -22,7 +22,10 @@ class IndexerConfig(BaseSettings):
     ipfs_gateway: str = Field("http://127.0.0.1:8080", alias="IPFS_GATEWAY")
 
     # Database configuration
-    postgres_url: str = Field("postgresql://nweb:nweb@localhost:5432/nweb", alias="POSTGRES_URL")
+    postgres_url: str = Field(
+        "postgresql+asyncpg://nweb:nweb@127.0.0.1:5432/nweb",
+        alias="POSTGRES_URL",
+    )
 
     # Indexer configuration
     poll_interval: int = Field(10, alias="INDEXER_POLL_INTERVAL")  # seconds

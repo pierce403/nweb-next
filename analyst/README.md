@@ -84,6 +84,23 @@ analyst/
 
 The analyst connects to the same PostgreSQL database used by the indexer. It uses Kysely for type-safe SQL queries.
 
+For Vercel or any public deployment, use a read-only database role:
+
+```env
+POSTGRES_URL=postgresql://nweb_analyst_ro:<password>@50.126.86.253:5432/nweb?sslmode=require
+ENABLE_PUBLIC_SUBMIT=false
+```
+
+The `?sslmode=require` flag is honored by the Analyst database pool. Set
+`POSTGRES_CA_CERT` to verify a custom CA; otherwise SSL is enabled without
+certificate verification for deployments where the CA is not available.
+
+The indexer uses SQLAlchemy asyncpg and needs a different URL shape:
+
+```env
+POSTGRES_URL=postgresql+asyncpg://nweb:<password>@127.0.0.1:5432/nweb
+```
+
 ### Schema Overview
 
 - **submissions**: Scan submission metadata and status
@@ -120,9 +137,10 @@ The analyst connects to the same PostgreSQL database used by the indexer. It use
 ### Environment Variables
 
 ```env
-POSTGRES_URL=postgresql://user:pass@host:port/database
+POSTGRES_URL=postgresql://nweb_analyst_ro:<password>@50.126.86.253:5432/nweb?sslmode=require
 NODE_ENV=production
 NEXT_PUBLIC_API_URL=https://your-domain.com
+ENABLE_PUBLIC_SUBMIT=false
 ```
 
 ### Build Commands

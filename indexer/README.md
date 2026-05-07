@@ -39,6 +39,25 @@ cp ../.env.example .env
 # Edit .env with your configuration
 ```
 
+For the indexer, `POSTGRES_URL` must use SQLAlchemy's asyncpg driver because
+the service creates an async engine:
+
+```bash
+POSTGRES_URL=postgresql+asyncpg://nweb:<password>@127.0.0.1:5432/nweb
+IPFS_API=http://127.0.0.1:5001
+IPFS_GATEWAY=http://127.0.0.1:8080
+```
+
+The Analyst frontend is different. It uses node-postgres/Kysely, so Vercel
+should use a plain read-only Postgres URL, for example:
+
+```bash
+POSTGRES_URL=postgresql://nweb_analyst_ro:<password>@50.126.86.253:5432/nweb?sslmode=require
+```
+
+Do not use the Vercel read-only URL for the indexer. Do not give Vercel the
+local writable `nweb` credential.
+
 4. Initialize database:
 ```bash
 createdb nweb
@@ -69,7 +88,7 @@ Configuration is handled via environment variables:
 - `RPC_URL`: Base mainnet RPC endpoint
 - `ATTESTOR_ADDRESS`: Attestor contract address
 - `SCHEMA_UID_SCAN_SUBMISSION`: Schema UID for scan submissions
-- `POSTGRES_URL`: Postgres connection string
+- `POSTGRES_URL`: Async SQLAlchemy Postgres connection string, e.g. `postgresql+asyncpg://nweb:<password>@127.0.0.1:5432/nweb`
 - `IPFS_API`: IPFS API endpoint
 - `INDEXER_POLL_INTERVAL`: Block polling interval (seconds)
 - `INDEXER_BATCH_SIZE`: Number of blocks to process per batch

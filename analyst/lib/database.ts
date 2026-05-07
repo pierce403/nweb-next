@@ -1,10 +1,32 @@
 import { Kysely, PostgresDialect, sql } from 'kysely'
-import { Pool } from 'pg'
+import { Pool, type PoolConfig } from 'pg'
 import { Database } from '../types/database'
 
 export type DB = Kysely<Database>
 
 let dbInstance: Kysely<Database> | null = null
+
+function getPostgresPoolConfig(connectionString: string): PoolConfig {
+  const poolConfig: PoolConfig = {
+    connectionString,
+    max: 10,
+  }
+
+  const url = new URL(connectionString)
+  const sslMode = url.searchParams.get('sslmode')
+  if (sslMode === 'require' || sslMode === 'verify-ca' || sslMode === 'verify-full') {
+    poolConfig.ssl = process.env.POSTGRES_CA_CERT
+      ? {
+          ca: process.env.POSTGRES_CA_CERT,
+          rejectUnauthorized: true,
+        }
+      : {
+          rejectUnauthorized: false,
+        }
+  }
+
+  return poolConfig
+}
 
 export async function getDatabase(): Promise<Kysely<Database>> {
   if (dbInstance) {
@@ -14,7 +36,6 @@ export async function getDatabase(): Promise<Kysely<Database>> {
   // Check if PostgreSQL URL is provided, otherwise use SQLite if database file exists
   const useSQLite = !process.env.POSTGRES_URL || process.env.POSTGRES_URL.trim() === ''
   const dbFileExists = require('fs').existsSync('./nweb-analyst.db')
-  console.log('🔍 Database check:', { useSQLite, dbFileExists, cwd: process.cwd(), files: require('fs').readdirSync('.') })
 
   if (useSQLite && dbFileExists) {
     console.log('🗄️  Using SQLite database with existing data')
@@ -81,10 +102,7 @@ export async function getDatabase(): Promise<Kysely<Database>> {
   } else {
     console.log('🗄️  Using PostgreSQL database')
     const dialect = new PostgresDialect({
-      pool: new Pool({
-        connectionString: process.env.POSTGRES_URL,
-        max: 10,
-      }),
+      pool: new Pool(getPostgresPoolConfig(process.env.POSTGRES_URL as string)),
     })
     dbInstance = new Kysely<Database>({
       dialect,

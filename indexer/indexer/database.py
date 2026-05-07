@@ -104,19 +104,26 @@ class DatabaseManager:
 
     async def initialize(self):
         """Initialize database connection."""
-        # Convert postgres:// to postgresql:// for SQLAlchemy
+        # The indexer uses SQLAlchemy's async engine, so plain Postgres URLs
+        # need the asyncpg driver prefix.
         db_url = config.postgres_url
         if db_url.startswith("postgres://"):
-            db_url = db_url.replace("postgres://", "postgresql://", 1)
+            db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
+        elif db_url.startswith("postgresql://"):
+            db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
-        self.engine = create_async_engine(
-            db_url,
-            echo=False,  # Set to True for SQL debugging
-            poolclass=StaticPool,
-            connect_args={
-                "check_same_thread": False,
-            } if "sqlite" in db_url else {},
-        )
+        engine_kwargs = {
+            "echo": False,  # Set to True for SQL debugging
+        }
+        if "sqlite" in db_url:
+            engine_kwargs.update(
+                {
+                    "poolclass": StaticPool,
+                    "connect_args": {"check_same_thread": False},
+                }
+            )
+
+        self.engine = create_async_engine(db_url, **engine_kwargs)
 
         self.session_factory = sessionmaker(
             bind=self.engine,

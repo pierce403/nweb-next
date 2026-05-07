@@ -49,6 +49,16 @@ interface ScanRecord {
 }
 
 export async function POST(request: NextRequest) {
+  if (process.env.ENABLE_PUBLIC_SUBMIT !== 'true') {
+    return NextResponse.json(
+      {
+        success: false,
+        error: 'Public scan submission is disabled',
+      },
+      { status: 403 }
+    )
+  }
+
   try {
     const db = await getDatabase()
 
@@ -140,7 +150,7 @@ export async function GET(request: NextRequest) {
   const documentation = {
     endpoint: '/api/submit',
     method: 'POST',
-    description: 'Submit scan results for indexing into the database',
+    description: 'Submit scan results for indexing into the database. Disabled unless ENABLE_PUBLIC_SUBMIT=true is set server-side.',
     format: {
       uid: 'string (unique identifier)',
       submitter: 'string (ethereum address)',
