@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '../../../lib/database'
 import { sql } from 'kysely'
+import { logAPIError, toAPIError } from '../../../lib/api'
 
 export async function GET(request: NextRequest) {
   try {
@@ -76,9 +77,11 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({ summary, ports, submissions, recent, ipfs: [] })
   } catch (error) {
-    console.error('Host API error:', error)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    const apiError = toAPIError(error, 'Failed to fetch host data')
+    logAPIError('Host API failed', apiError)
+    return NextResponse.json(
+      { error: apiError.message, code: apiError.code },
+      { status: apiError.statusCode }
+    )
   }
 }
-
-

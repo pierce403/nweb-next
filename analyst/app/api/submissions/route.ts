@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getSubmissions, APIError } from '../../../lib/api'
+import { getSubmissions, APIError, logAPIError } from '../../../lib/api'
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,10 +23,13 @@ export async function GET(request: NextRequest) {
       offset,
     })
   } catch (error) {
-    console.error('Submissions API error:', error)
+    logAPIError('Submissions API failed', error)
     const status = error instanceof APIError ? error.statusCode : 500
     return NextResponse.json(
-      { error: 'Failed to fetch submissions' },
+      {
+        error: error instanceof APIError ? error.message : 'Failed to fetch submissions',
+        code: error instanceof APIError ? error.code : 'INTERNAL_ERROR',
+      },
       { status },
     )
   }

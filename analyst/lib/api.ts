@@ -9,9 +9,102 @@ import type {
 } from '../types/database'
 
 export class APIError extends Error {
-  constructor(public statusCode: number, message: string) {
+  constructor(
+    public statusCode: number,
+    message: string,
+    public code = statusCode === 503 ? 'SERVICE_UNAVAILABLE' : 'API_ERROR',
+  ) {
     super(message)
     this.name = 'APIError'
+  }
+}
+
+type ErrorLike = {
+  code?: string
+  errno?: number
+  syscall?: string
+  hostname?: string
+  address?: string
+  port?: number
+  cause?: unknown
+}
+
+const databaseConnectionCodes = new Set([
+  'ENOTFOUND',
+  'EAI_AGAIN',
+  'ECONNREFUSED',
+  'ECONNRESET',
+  'ETIMEDOUT',
+  'EHOSTUNREACH',
+  'ENETUNREACH',
+  '28P01',
+  '3D000',
+  '53300',
+  '57P01',
+  '57P03',
+])
+
+export function isDatabaseConnectionError(error: unknown): boolean {
+  const details = getErrorDetails(error)
+  if (details.code && databaseConnectionCodes.has(details.code)) {
+    return true
+  }
+  const message = error instanceof Error ? error.message : String(error)
+  return /getaddrinfo|connect ECONN|timeout|terminating connection|too many connections/i.test(message)
+}
+
+export function toAPIError(error: unknown, fallbackMessage: string): APIError {
+  if (error instanceof APIError) {
+    return error
+  }
+  if (isDatabaseConnectionError(error)) {
+    return new APIError(
+      503,
+      'Database is unavailable. Check POSTGRES_URL, DNS, and network access.',
+      'DATABASE_UNAVAILABLE',
+    )
+  }
+  return new APIError(500, fallbackMessage)
+}
+
+export function logAPIError(context: string, error: unknown): void {
+  const details = getErrorDetails(error)
+  if (error instanceof APIError) {
+    console.warn(context, {
+      code: error.code,
+      statusCode: error.statusCode,
+      message: error.message,
+    })
+    return
+  }
+  if (isDatabaseConnectionError(error)) {
+    console.warn(context, {
+      code: details.code,
+      errno: details.errno,
+      syscall: details.syscall,
+      hostname: details.hostname,
+      address: details.address,
+      port: details.port,
+      message: error instanceof Error ? error.message : String(error),
+    })
+    return
+  }
+  console.error(context, error)
+}
+
+function getErrorDetails(error: unknown): ErrorLike {
+  if (!error || typeof error !== 'object') {
+    return {}
+  }
+  const current = error as ErrorLike
+  const cause = getErrorDetails(current.cause)
+  return {
+    code: current.code ?? cause.code,
+    errno: current.errno ?? cause.errno,
+    syscall: current.syscall ?? cause.syscall,
+    hostname: current.hostname ?? cause.hostname,
+    address: current.address ?? cause.address,
+    port: current.port ?? cause.port,
   }
 }
 
@@ -127,8 +220,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       top_ips: topIPs.map(ip => ({ ip: ip.ip, count: Number(ip.count) })),
     }
   } catch (error) {
-    console.error('Error fetching dashboard stats:', error)
-    throw new APIError(500, 'Failed to fetch dashboard statistics')
+    throw toAPIError(error, 'Failed to fetch dashboard statistics')
   }
 }
 
@@ -189,8 +281,7 @@ export async function getSubmissions({
     const results = await query.execute()
     return results as SubmissionWithStats[]
   } catch (error) {
-    console.error('Error fetching submissions:', error)
-    throw new APIError(500, 'Failed to fetch submissions')
+    throw toAPIError(error, 'Failed to fetch submissions')
   }
 }
 
@@ -215,8 +306,7 @@ export async function getSubmission(uid: string): Promise<SubmissionWithStats | 
 
     return result as SubmissionWithStats | null
   } catch (error) {
-    console.error('Error fetching submission:', error)
-    throw new APIError(500, 'Failed to fetch submission')
+    throw toAPIError(error, 'Failed to fetch submission')
   }
 }
 
@@ -272,8 +362,7 @@ export async function getRecords({
 
     return await query.execute()
   } catch (error) {
-    console.error('Error fetching records:', error)
-    throw new APIError(500, 'Failed to fetch records')
+    throw toAPIError(error, 'Failed to fetch records')
   }
 }
 
@@ -286,8 +375,7 @@ export async function getRecord(id: number): Promise<Selectable<DBRecord> | null
       .executeTakeFirst()
     return row ?? null
   } catch (error) {
-    console.error('Error fetching record:', error)
-    throw new APIError(500, 'Failed to fetch record')
+    throw toAPIError(error, 'Failed to fetch record')
   }
 }
 
@@ -306,8 +394,7 @@ export async function searchIPs(query: string, limit = 20): Promise<Array<{ip: s
       .limit(limit)
       .execute()
   } catch (error) {
-    console.error('Error searching IPs:', error)
-    throw new APIError(500, 'Failed to search IPs')
+    throw toAPIError(error, 'Failed to search IPs')
   }
 }
 
@@ -327,8 +414,7 @@ export async function searchServices(query: string, limit = 20): Promise<Array<{
       .execute()
     return rows.map(r => ({ service: r.service || 'Unknown', count: Number(r.count) }))
   } catch (error) {
-    console.error('Error searching services:', error)
-    throw new APIError(500, 'Failed to search services')
+    throw toAPIError(error, 'Failed to search services')
   }
 }
 
@@ -341,7 +427,7 @@ export async function getIndexerState(): Promise<IndexerState | null> {
       .executeTakeFirst()
     return row ?? null
   } catch (error) {
-    console.error('Error fetching indexer state:', error)
+    logAPIError('Indexer state query failed', error)
     return null
   }
 }

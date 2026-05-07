@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDashboardStats } from '../../../lib/api'
+import { getDashboardStats, logAPIError } from '../../../lib/api'
 
 const DEFAULT_DISPATCHER_URL = 'http://127.0.0.1:7778'
 
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
         }
       }
     } catch (error) {
-      console.error('Database connection error:', error)
+      logAPIError('Status database check failed', error)
       // Database not connected
       databaseInfo = {
         connected: false,

@@ -85,6 +85,7 @@ Known local URLs:
 - The Analyst does not pull directly from IPFS. It reads the indexed database. The indexer owns IPFS fetching and parsing in the network path.
 - Indexer and Analyst Postgres URLs intentionally differ: indexer uses SQLAlchemy asyncpg, e.g. `postgresql+asyncpg://nweb:<password>@127.0.0.1:5432/nweb`; Analyst/Vercel uses node-postgres/Kysely with a read-only role, e.g. `postgresql://nweb_analyst_ro:<password>@50.126.86.253:5432/nweb?sslmode=require`.
 - Public Analyst `/api/submit` is disabled unless `ENABLE_PUBLIC_SUBMIT=true` is set server-side. Keep Vercel on read-only DB credentials.
+- Analyst API routes should classify database connection failures through `logAPIError`/`toAPIError` and return `503 DATABASE_UNAVAILABLE` instead of logging raw pg stack traces.
 - For local development, `run-collector.sh` can post directly to `http://127.0.0.1:3000/api/submit`.
 - Dispatcher priority domains come from Analyst `/targets` and are returned before random IPv4/static work.
 - Random IPv4 work excludes private, loopback, link-local, multicast, documentation, benchmarking, and reserved ranges, but operators remain responsible for lawful scanning.

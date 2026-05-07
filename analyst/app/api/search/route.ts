@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '../../../lib/database'
+import { isDatabaseConnectionError, logAPIError, toAPIError } from '../../../lib/api'
 
 interface SearchResult {
   type: 'submission' | 'record' | 'ip' | 'service'
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
             const results = await queryObj.execute()
             submissionResults.push(...results)
           } catch (error) {
+            if (isDatabaseConnectionError(error)) throw error
             console.error('Submission query error:', error)
           }
         }
@@ -86,6 +88,7 @@ export async function GET(request: NextRequest) {
           })
         }
       } catch (error) {
+        if (isDatabaseConnectionError(error)) throw error
         console.error('Submission search error:', error)
       }
     }
@@ -106,6 +109,7 @@ export async function GET(request: NextRequest) {
             const results = await queryObj.execute()
             recordResults.push(...results)
           } catch (error) {
+            if (isDatabaseConnectionError(error)) throw error
             console.error('Record query error:', error)
           }
         }
@@ -135,6 +139,7 @@ export async function GET(request: NextRequest) {
           })
         }
       } catch (error) {
+        if (isDatabaseConnectionError(error)) throw error
         console.error('Record search error:', error)
       }
     }
@@ -176,6 +181,7 @@ export async function GET(request: NextRequest) {
           })
         }
       } catch (error) {
+        if (isDatabaseConnectionError(error)) throw error
         console.error('IP search error:', error)
       }
     }
@@ -218,6 +224,7 @@ export async function GET(request: NextRequest) {
           })
         }
       } catch (error) {
+        if (isDatabaseConnectionError(error)) throw error
         console.error('Service search error:', error)
       }
     }
@@ -239,16 +246,18 @@ export async function GET(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Search API error:', error)
+    const apiError = toAPIError(error, 'Search failed')
+    logAPIError('Search API failed', apiError)
     return NextResponse.json(
       {
         query: '',
         total: 0,
         results: [],
         took: 0,
-        error: 'Search failed'
+        error: apiError.message,
+        code: apiError.code,
       },
-      { status: 500 }
+      { status: apiError.statusCode }
     )
   }
 }

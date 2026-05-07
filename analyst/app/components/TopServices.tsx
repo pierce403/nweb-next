@@ -18,13 +18,13 @@ export function TopServices() {
       setLoading(true)
       const response = await fetch('/api/dashboard/stats')
       if (!response.ok) {
-        throw new Error('Failed to fetch dashboard stats')
+        const body = await response.json().catch(() => null)
+        throw new Error(body?.error || 'Failed to fetch dashboard stats')
       }
       const data = await response.json()
       setStats(data)
     } catch (error) {
-      console.error('Error fetching dashboard stats:', error)
-      toast.error('Failed to load top services')
+      toast.error(error instanceof Error ? error.message : 'Failed to load top services')
     } finally {
       setLoading(false)
     }

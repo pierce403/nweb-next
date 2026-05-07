@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '../../../lib/database'
 import { sql } from 'kysely'
 import { v4 as uuidv4 } from 'uuid'
+import { logAPIError, toAPIError } from '../../../lib/api'
 
 interface ScanResult {
   uid: string
@@ -133,14 +134,15 @@ export async function POST(request: NextRequest) {
     })
 
   } catch (error) {
-    console.error('Submit API error:', error)
+    const apiError = toAPIError(error, 'Failed to index scan result')
+    logAPIError('Submit API failed', apiError)
     return NextResponse.json(
       {
         success: false,
-        error: 'Failed to index scan result',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: apiError.message,
+        code: apiError.code,
       },
-      { status: 500 }
+      { status: apiError.statusCode }
     )
   }
 }
