@@ -3,7 +3,7 @@
 import asyncio
 from typing import List, Dict, Any, Optional, Callable
 from web3 import AsyncWeb3, AsyncHTTPProvider
-from web3.eth import AsyncContract
+from web3.contract.async_contract import AsyncContract
 from web3.exceptions import BlockNotFound
 from eth_utils import to_hex
 from structlog import get_logger
