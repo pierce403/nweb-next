@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeftIcon, GlobeAltIcon } from '@heroicons/react/24/outline'
@@ -13,7 +13,7 @@ interface HostSummary {
   unique_services: string[]
 }
 
-export default function HostPage() {
+function HostContent() {
   const searchParams = useSearchParams()
   const ip = searchParams.get('h') || searchParams.get('ip') || ''
 
@@ -170,6 +170,14 @@ export default function HostPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function HostPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+      <HostContent />
+    </Suspense>
   )
 }
 
